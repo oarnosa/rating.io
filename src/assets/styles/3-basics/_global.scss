@@ -1,0 +1,12 @@
+// Basic global styles
+
+body {
+  color: $color-secondary;
+  background: $color-primary;
+  min-height: 100vh;
+  max-width: 100vw;
+}
+
+button {
+  outline: none;
+}
