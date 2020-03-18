@@ -3,66 +3,88 @@ import BlizzAPI from "blizzapi";
 
 import "./profile.styles.scss";
 
-const Profile = ({ realm, name }) => {
-  // declare hooks to set and store data
-  const [profile, setProfile] = useState({});
+const Profile = ({ region, realm, name }) => {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // request oauth access token with client info
-    const api = new BlizzAPI({
-      region: "us",
-      clientId: process.env.REACT_APP_CLIENT_ID,
-      clientSecret: process.env.REACT_APP_CLIENT_SECRET
-    });
-
-    // fetch and store profile data
     const fetchData = async () => {
-      const data = await api.query(
-        `/wow/character/${realm}/${name}?fields=profile,statistics,pvp,items`
-      );
+      setIsLoading(true);
+      setError(false);
 
-      const profile = {
-        Name: data.name,
-        Level: data.level,
-        "Item Level": data.items.averageItemLevel,
-        "Current 2v2": data.pvp.brackets.ARENA_BRACKET_2v2.rating,
-        "Highest 2v2":
-          data.statistics.subCategories[9].subCategories[0].statistics[24]
-            .quantity,
-        "Current 3v3": data.pvp.brackets.ARENA_BRACKET_3v3.rating,
-        "Highest 3v3":
-          data.statistics.subCategories[9].subCategories[0].statistics[23]
-            .quantity,
-        "Current RBG": data.pvp.brackets.ARENA_BRACKET_RBG.rating,
-        "Honorable Kills": data.totalHonorableKills
-      };
+      const api = new BlizzAPI({
+        region: `${region}`,
+        clientId: process.env.REACT_APP_CLIENT_ID,
+        clientSecret: process.env.REACT_APP_CLIENT_SECRET
+      });
 
-      setProfile(profile);
-      console.log(data);
+      try {
+        const data = await api.query(
+          `/wow/character/${realm}/${name}?fields=profile,statistics,pvp,items`
+        );
+        setData(data);
+      } catch (e) {
+        setError(true);
+      }
+      setIsLoading(false);
     };
 
     fetchData();
-  }, [realm, name]);
+  }, [region, realm, name]);
 
   return (
-    <div>
-      <ul>
-        {Object.entries(profile).map(([key, value], i) => (
-          <li key={i}>
-            {`${key}: `}
-            <strong>{value}</strong>
-          </li>
-        ))}
-      </ul>
-      <button
-        onClick={() =>
-          window.open(
-            `https://worldofwarcraft.com/en-us/character/us/${realm}/${name}`
-          )
-        }
-      >
-        View Armory
-      </button>
+    <div className="profile">
+      {isLoading ? (
+        <div className="profile__loading">
+          <p className="loading__msg">Looking for character...</p>
+        </div>
+      ) : error || data === null ? (
+        <div className="profile__error">
+          <p className="error__msg">Character not found</p>
+        </div>
+      ) : (
+        <div className="profile__char">
+          <p className="char__stat ">
+            Name: <strong>{data.name}</strong>
+          </p>
+          <p className="char__stat ">
+            Level: <strong>{data.level}</strong>
+          </p>
+          <p className="char__stat ">
+            Item Level: {data.items.averageItemLevel}
+          </p>
+          <p className="char__stat ">
+            2v2 Current:{" "}
+            <strong>{data.pvp.brackets.ARENA_BRACKET_2v2.rating}</strong>{" "}
+            Highest:{" "}
+            <strong>
+              {
+                data.statistics.subCategories[9].subCategories[0].statistics[24]
+                  .quantity
+              }
+            </strong>
+          </p>
+          <p className="char__stat ">
+            3v3 Current:{" "}
+            <strong>{data.pvp.brackets.ARENA_BRACKET_3v3.rating}</strong>{" "}
+            Highest:{" "}
+            <strong>
+              {
+                data.statistics.subCategories[9].subCategories[0].statistics[23]
+                  .quantity
+              }
+            </strong>
+          </p>
+          <p className="char__stat ">
+            RBG Current:{" "}
+            <strong>{data.pvp.brackets.ARENA_BRACKET_RBG.rating}</strong>
+          </p>
+          <p className="char__stat ">
+            Honorable Kills: <strong>{data.totalHonorableKills}</strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 };
