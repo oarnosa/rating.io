@@ -3,7 +3,7 @@ import BlizzAPI from "blizzapi";
 
 import "./profile.styles.scss";
 
-const Profile = ({ region, realm, name }) => {
+const Profile = ({ realm, name }) => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -14,17 +14,18 @@ const Profile = ({ region, realm, name }) => {
       setError(false);
 
       const api = new BlizzAPI({
-        region: `${region}`,
+        region: "us",
         clientId: process.env.REACT_APP_CLIENT_ID,
         clientSecret: process.env.REACT_APP_CLIENT_SECRET
       });
 
       const accessToken = await api.getAccessToken();
-      const url = `https://${region}.api.blizzard.com/profile/wow/character/${realm}/${name}?namespace=profile-${region}&access_token=${accessToken}`;
+      const url = `https://us.api.blizzard.com/profile/wow/character/${realm}/${name}?namespace=profile-us&locale=en_US&access_token=${accessToken}`;
 
       try {
         const res = await fetch(url);
         const data = await res.json();
+        console.log(data);
         setData(data);
       } catch (e) {
         setError(true);
@@ -33,7 +34,7 @@ const Profile = ({ region, realm, name }) => {
     };
 
     fetchData();
-  }, [region, realm, name]);
+  }, [realm, name]);
 
   return (
     <div className="profile">
@@ -43,7 +44,7 @@ const Profile = ({ region, realm, name }) => {
         </div>
       ) : error || data === null ? (
         <div className="profile__error">
-          <p className="error__msg" style={{ color: "red" }}>
+          <p className="error__msg">
             No armory data found for{" "}
             <strong>
               {name} - {realm}
@@ -52,11 +53,26 @@ const Profile = ({ region, realm, name }) => {
         </div>
       ) : (
         <div className="profile__char">
-          <p className="success__msg" style={{ color: "green" }}>
-            Successfully found armory data for{" "}
-            <strong>
-              {name} - {realm}
-            </strong>
+          <p className="char__stat">
+            Name: <strong>{data.name}</strong>
+          </p>
+          <p className="char__stat">
+            Level: <strong>{data.level}</strong>
+          </p>
+          <p className="char__stat">
+            Item Level: <strong>{data.average_item_level}</strong>
+          </p>
+          <p className="char__stat ">
+            2v2 Current: <strong>{}</strong> Highest: <strong>{}</strong>
+          </p>
+          <p className="char__stat ">
+            3v3 Current: <strong>{}</strong> Highest: <strong>{}</strong>
+          </p>
+          <p className="char__stat ">
+            RBG Current: <strong>{}</strong>
+          </p>
+          <p className="char__stat ">
+            Honorable Kills: <strong>{}</strong>
           </p>
         </div>
       )}
