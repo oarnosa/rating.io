@@ -19,10 +19,12 @@ const Profile = ({ region, realm, name }) => {
         clientSecret: process.env.REACT_APP_CLIENT_SECRET
       });
 
+      const accessToken = await api.getAccessToken();
+      const url = `https://${region}.api.blizzard.com/profile/wow/character/${realm}/${name}?namespace=profile-${region}&access_token=${accessToken}`;
+
       try {
-        const data = await api.query(
-          `/wow/character/${realm}/${name}?fields=profile,statistics,pvp,items`
-        );
+        const res = await fetch(url);
+        const data = await res.json();
         setData(data);
       } catch (e) {
         setError(true);
@@ -41,47 +43,20 @@ const Profile = ({ region, realm, name }) => {
         </div>
       ) : error || data === null ? (
         <div className="profile__error">
-          <p className="error__msg">Character not found</p>
+          <p className="error__msg" style={{ color: "red" }}>
+            No armory data found for{" "}
+            <strong>
+              {name} - {realm}
+            </strong>
+          </p>
         </div>
       ) : (
         <div className="profile__char">
-          <p className="char__stat ">
-            Name: <strong>{data.name}</strong>
-          </p>
-          <p className="char__stat ">
-            Level: <strong>{data.level}</strong>
-          </p>
-          <p className="char__stat ">
-            Item Level: {data.items.averageItemLevel}
-          </p>
-          <p className="char__stat ">
-            2v2 Current:{" "}
-            <strong>{data.pvp.brackets.ARENA_BRACKET_2v2.rating}</strong>{" "}
-            Highest:{" "}
+          <p className="success__msg" style={{ color: "green" }}>
+            Successfully found armory data for{" "}
             <strong>
-              {
-                data.statistics.subCategories[9].subCategories[0].statistics[24]
-                  .quantity
-              }
+              {name} - {realm}
             </strong>
-          </p>
-          <p className="char__stat ">
-            3v3 Current:{" "}
-            <strong>{data.pvp.brackets.ARENA_BRACKET_3v3.rating}</strong>{" "}
-            Highest:{" "}
-            <strong>
-              {
-                data.statistics.subCategories[9].subCategories[0].statistics[23]
-                  .quantity
-              }
-            </strong>
-          </p>
-          <p className="char__stat ">
-            RBG Current:{" "}
-            <strong>{data.pvp.brackets.ARENA_BRACKET_RBG.rating}</strong>
-          </p>
-          <p className="char__stat ">
-            Honorable Kills: <strong>{data.totalHonorableKills}</strong>
           </p>
         </div>
       )}
