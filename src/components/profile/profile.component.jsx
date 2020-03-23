@@ -1,83 +1,59 @@
-import React, { useState, useEffect } from "react";
-import BlizzAPI from "blizzapi";
+import React, { Fragment } from "react";
 
-import "./profile.styles.scss";
-
-const Profile = ({ realm, name }) => {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(false);
-
-      const api = new BlizzAPI({
-        region: "us",
-        clientId: process.env.REACT_APP_CLIENT_ID,
-        clientSecret: process.env.REACT_APP_CLIENT_SECRET
-      });
-
-      const accessToken = await api.getAccessToken();
-      const url = `https://us.api.blizzard.com/profile/wow/character/${realm}/${name}?namespace=profile-us&locale=en_US&access_token=${accessToken}`;
-
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        console.log(data);
-        setData(data);
-      } catch (e) {
-        setError(true);
-      }
-      setIsLoading(false);
-    };
-
-    fetchData();
-  }, [realm, name]);
-
-  return (
-    <div className="profile">
-      {isLoading ? (
-        <div className="profile__loading">
-          <p className="loading__msg">Looking for character...</p>
-        </div>
-      ) : error || data === null ? (
-        <div className="profile__error">
-          <p className="error__msg">
-            No armory data found for{" "}
-            <strong>
-              {name} - {realm}
-            </strong>
-          </p>
-        </div>
-      ) : (
-        <div className="profile__char">
-          <p className="char__stat">
-            Name: <strong>{data.name}</strong>
-          </p>
-          <p className="char__stat">
-            Level: <strong>{data.level}</strong>
-          </p>
-          <p className="char__stat">
-            Item Level: <strong>{data.average_item_level}</strong>
-          </p>
-          <p className="char__stat ">
-            2v2 Current: <strong>{}</strong> Highest: <strong>{}</strong>
-          </p>
-          <p className="char__stat ">
-            3v3 Current: <strong>{}</strong> Highest: <strong>{}</strong>
-          </p>
-          <p className="char__stat ">
-            RBG Current: <strong>{}</strong>
-          </p>
-          <p className="char__stat ">
-            Honorable Kills: <strong>{}</strong>
-          </p>
-        </div>
-      )}
-    </div>
-  );
-};
+const Profile = ({
+  data: [profile, achievements, pvp_summary, pvp_2v2, pvp_3v3, pvp_rbg]
+}) => (
+  <Fragment>
+    <p className="profile__stat">
+      <strong>{profile.code > 400 ? "no data found" : profile.name}</strong>
+    </p>
+    <p className="profile__stat">
+      item level:{" "}
+      <strong>
+        {pvp_summary.code > 400 ? "no data found" : profile.average_item_level}
+      </strong>
+    </p>
+    <p className="profile__stat">
+      2v2 current:{" "}
+      <strong>{pvp_2v2.code > 400 ? "no data found" : pvp_2v2.rating}</strong>{" "}
+      highest:{" "}
+      <strong>
+        {achievements.code > 400
+          ? "no data found"
+          : achievements.statistics
+              .find(item => item.name === "Player vs. Player")
+              .sub_categories.find(item => item.name === "Rated Arenas")
+              .statistics.find(
+                item => item.name === "Highest 2 man personal rating"
+              ).quantity}
+      </strong>
+    </p>
+    <p className="profile__stat">
+      3v3 current:{" "}
+      <strong>{pvp_3v3.code > 400 ? "no data found" : pvp_3v3.rating}</strong>{" "}
+      highest:{" "}
+      <strong>
+        {achievements.code > 400
+          ? "no data found"
+          : achievements.statistics
+              .find(item => item.name === "Player vs. Player")
+              .sub_categories.find(item => item.name === "Rated Arenas")
+              .statistics.find(
+                item => item.name === "Highest 3 man personal rating"
+              ).quantity}
+      </strong>
+    </p>
+    <p className="profile__stat">
+      rbg current:{" "}
+      <strong>{pvp_rbg.code > 400 ? "no data found" : pvp_rbg.rating}</strong>
+    </p>
+    <p className="profile__stat">
+      honorable kills:{" "}
+      <strong>
+        {pvp_summary.code > 400 ? "no data found" : pvp_summary.honorable_kills}
+      </strong>
+    </p>
+  </Fragment>
+);
 
 export default Profile;
